@@ -7,7 +7,7 @@ const insideRootFolder = hasRootPath(rootFolder);
 
 
 const validateRootPath = (req, res, next) => {
-        const filePath = path.normalize(rootFolder + '/' + req.query.path);
+        const filePath = path.normalize(rootFolder + '/' + req.query.path || '');
 
         if(insideRootFolder(filePath)) {
             req.query.fullPath = filePath;

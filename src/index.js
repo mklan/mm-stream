@@ -17,7 +17,7 @@ app.get('/stream', (req, res) => {
 app.get('/list', async (req, res) => {
     try {
         const entries = await getContent(req.query.fullPath);
-        res.send([{ up: `http://localhost:3000/list?path=${entries[0].path.replace(encodeURIComponent(entries[0].name), '')}/..` }, ...entries]);
+        res.send([{ up: `http://${process.env.MM_HOST}:${port}/list?path=${entries[0].path.replace(encodeURIComponent(entries[0].name), '')}/..` }, ...entries]);
     } catch (e) {
         console.log(e);
     }
