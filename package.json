@@ -1,18 +1,16 @@
 {
-  "name": "player",
-  "version": "1.0.0",
-  "description": "",
+  "name": "mm-stream",
+  "version": "0.1.0",
+  "description": "multimedia streaming service",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Matthias Klan <matthias.klan@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "async": "^2.6.1",
     "express": "^4.16.3",
-    "mediaserver": "^0.1.1",
-    "node-dir": "^0.1.17"
+    "mediaserver": "^0.1.1"
   }
 }

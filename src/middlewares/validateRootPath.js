@@ -1,7 +1,6 @@
 const path = require('path');
 
-// TODO move to env
-const rootFolder = "/home/matthias/nfs/Multimedia/Musik";
+const rootFolder = process.env.MM_FOLDER;
 
 const hasRootPath = rootPath => path => path.startsWith(rootPath);
 const insideRootFolder = hasRootPath(rootFolder);

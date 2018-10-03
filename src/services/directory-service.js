@@ -6,8 +6,7 @@ const stat = util.promisify(fs.stat);
 const readdir = util.promisify(fs.readdir);
 const map = util.promisify(async.map);
 
-// TODO move to env
-const rootFolder = "/home/matthias/nfs/Multimedia/Musik";
+const rootFolder = process.env.MM_FOLDER;
 
 async function getContent(path) {
     const files = await readdir(path, { withFileTypes: true });
