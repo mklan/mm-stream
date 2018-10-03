@@ -1,10 +1,14 @@
 # mm-stream
-rest api for exploring and streaming of media files
-
+rest api for exploring and streaming of media files (tested with flac, mp3)
 
 ## Usage
 
-set `MM_FOLDER` to your base media folder and `MM_HOST` your host and than run `npm start`
+```bash
+  export MM_FOLDER=/path/to/media_folder
+  export MM_HOST=example.duckdns.org
+```
+
+`npm run start`
 
 ## Api
 
