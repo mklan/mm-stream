@@ -4,6 +4,7 @@
   "description": "multimedia streaming service",
   "main": "index.js",
   "scripts": {
+    "run": "pm2 start src/index.js",
     "start": "node src/index.js"
   },
   "author": "Matthias Klan <matthias.klan@gmail.com>",
@@ -11,6 +12,7 @@
   "dependencies": {
     "async": "^2.6.1",
     "express": "^4.16.3",
-    "mediaserver": "^0.1.1"
+    "mediaserver": "^0.1.1",
+    "pm2": "^3.1.3"
   }
 }

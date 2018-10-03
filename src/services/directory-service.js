@@ -7,6 +7,7 @@ const readdir = util.promisify(fs.readdir);
 const map = util.promisify(async.map);
 
 const rootFolder = process.env.MM_FOLDER;
+const host = process.env.MM_HOST || 'localhost';
 
 async function getContent(path) {
     const files = await readdir(path, { withFileTypes: true });
@@ -23,7 +24,7 @@ async function getContent(path) {
             isFile, 
             name: file.name, 
             path: sanitizedPath,
-            enter: `http://localhost:3000/${ isFile ? 'stream' : 'list' }?path=${sanitizedPath}`
+            enter: `http://${host}:3000/${ isFile ? 'stream' : 'list' }?path=${sanitizedPath}`
             //children 
         };
     };
