@@ -4,7 +4,7 @@ rest api for exploring and streaming of media files
 
 ## Usage
 
-set `MM_FOLDER` to your base media folder and than run `npm start`
+set `MM_FOLDER` to your base media folder and `MM_HOST` your host and than run `npm start`
 
 ## Api
 
