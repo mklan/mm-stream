@@ -9,8 +9,12 @@ const map = util.promisify(async.map);
 const rootFolder = process.env.MM_FOLDER;
 const host = process.env.MM_HOST || 'localhost';
 
+const audioTypes = ['mp3', 'flac', 'ogg'];
+
 async function getContent(path) {
     const files = await readdir(path, { withFileTypes: true });
+
+    const isDirOrAudioFile = file => !file.isFile() || audioTypes.indexOf(file.name.split('.').slice(-1)[0]) > -1;
 
     const getDetails = async (file) => {
         const isFile = file.isFile();
@@ -29,7 +33,7 @@ async function getContent(path) {
         };
     };
 
-    return map(files, getDetails)
+    return map(files.filter(isDirOrAudioFile), getDetails);
 };
 
 module.exports = getContent;
