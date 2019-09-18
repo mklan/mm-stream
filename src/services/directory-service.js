@@ -43,7 +43,7 @@ const constructContentObject = path => async file => {
 };
 
 const createParentLink = path => {
-  if (isRootFolder(path)) return [];
+  if (isRootFolder(path) || path === "/") return [];
   const sanitizedPath = sanitizePath(path) + "/..";
 
   return [
