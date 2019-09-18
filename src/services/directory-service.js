@@ -3,6 +3,7 @@ const util = require("util");
 const fs = require("fs");
 const NodeCache = require("node-cache");
 const _path = require("path");
+const mm = require("music-metadata");
 
 const { getFullPath, host, isRootFolder } = require("./server-config");
 
@@ -33,10 +34,22 @@ const constructContentObject = path => async file => {
   const { size } = await stat(filePath);
   const sanitizedPath = sanitizePath(filePath);
 
+  let metadata = {};
+  if (isFile) {
+    const {
+      common: { title, artist }
+    } = await mm.parseFile(filePath, { native: true });
+    metadata = {
+      title,
+      artist
+    };
+  }
+
   return {
     size,
     isFile,
     name: file.name,
+    metadata,
     path: sanitizedPath,
     enter: `http://${host}/${isFile ? "stream" : "list"}?path=${sanitizedPath}`
   };
