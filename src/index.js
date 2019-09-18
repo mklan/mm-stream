@@ -2,11 +2,13 @@ const express = require("express");
 const ms = require("mediaserver");
 require("dotenv").config();
 
+const ip = require("ip");
 const validateRootPath = require("./middlewares/validateRootPath");
 const getContent = require("./services/directory-service");
 
 const app = express();
-const port = 3000;
+const port = process.env.MM_PORT || 3000;
+const host = process.env.MM_HOST || ip.address() + ":" + port;
 
 app.use("/stream", validateRootPath);
 app.use("/list", validateRootPath);
@@ -21,12 +23,10 @@ app.get("/stream", (req, res) => {
 
 app.get("/list", async (req, res) => {
   try {
-    const entries = await getContent(req.query.fullPath);
+    const entries = await getContent(req.query.fullPath, host);
     res.send([
       {
-        up: `http://${
-          process.env.MM_HOST
-        }:${port}/list?path=${entries[0].path.replace(
+        up: `http://${host}/list?path=${entries[0].path.replace(
           encodeURIComponent(entries[0].name),
           ""
         )}/..`
