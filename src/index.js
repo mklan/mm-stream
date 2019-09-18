@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const ms = require("mediaserver");
 require("dotenv").config();
 
@@ -10,6 +11,7 @@ const app = express();
 const port = process.env.MM_PORT || 3000;
 const host = process.env.MM_HOST || ip.address() + ":" + port;
 
+app.use(cors());
 app.use("/stream", validateRootPath);
 app.use("/list", validateRootPath);
 
