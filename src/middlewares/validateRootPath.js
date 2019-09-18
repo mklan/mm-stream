@@ -1,19 +1,12 @@
-const path = require("path");
-
-const rootFolder = process.env.MM_FOLDER;
-
-const hasRootPath = rootPath => path => path.startsWith(rootPath);
-const insideRootFolder = hasRootPath(rootFolder);
+const { getFullPath, insideRoot } = require("../services/server-config");
 
 const validateRootPath = (req, res, next) => {
-  const filePath = path.normalize(rootFolder + "/" + (req.query.path || ""));
+  const filePath = getFullPath(req.query.path);
 
-  if (insideRootFolder(filePath)) {
-    req.query.fullPath = filePath;
-    next();
-  } else {
+  if (!insideRoot(filePath)) {
     res.send("path is not inside the configured media folder!");
   }
+  next();
 };
 
 module.exports = validateRootPath;

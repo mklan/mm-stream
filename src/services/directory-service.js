@@ -4,6 +4,8 @@ const fs = require("fs");
 const NodeCache = require("node-cache");
 const _path = require("path");
 
+const { getFullPath, host } = require("./server-config");
+
 const stat = util.promisify(fs.stat);
 const readdir = util.promisify(fs.readdir);
 const map = util.promisify(async.map);
@@ -21,14 +23,15 @@ const hasExtension = arr => file => {
 };
 const isAudioFile = hasExtension(audioExtensions);
 
-const constructContentObject = (path, host) => async file => {
-  const isFile = file.isFile();
-  const currPath = path + "/" + file.name;
+const sanitizePath = path =>
+  encodeURIComponent(path.replace(rootFolder + "/", ""));
 
-  const { size } = await stat(currPath);
-  const sanitizedPath = encodeURIComponent(
-    currPath.replace(rootFolder + "/", "")
-  );
+const constructContentObject = path => async file => {
+  const isFile = file.isFile();
+  const filePath = _path.join(getFullPath(path), file.name);
+
+  const { size } = await stat(filePath);
+  const sanitizedPath = sanitizePath(filePath);
 
   return {
     size,
@@ -36,11 +39,17 @@ const constructContentObject = (path, host) => async file => {
     name: file.name,
     path: sanitizedPath,
     enter: `http://${host}/${isFile ? "stream" : "list"}?path=${sanitizedPath}`
-    //children
   };
 };
 
-async function getContent(path, host) {
+const createParentLink = path => ({
+  isFile: false,
+  name: "..",
+  path: sanitizePath(path) + "/..",
+  enter: `http://${host}/list?path=${sanitizePath(path) + "/.."}`
+});
+
+async function getContent(path) {
   console.log("get content for", path);
   const cachedContent = contentCache.get(path);
   if (cachedContent) {
@@ -49,13 +58,16 @@ async function getContent(path, host) {
   }
 
   console.log("read from disk");
-  const files = await readdir(path, { withFileTypes: true });
+  const files = await readdir(getFullPath(path), { withFileTypes: true });
   const content = await map(
     files.filter(isDirOrAudio),
-    constructContentObject(path, host)
+    constructContentObject(path)
   );
-  contentCache.set(path, content);
-  return content;
+
+  const contentWithDirUp = [createParentLink(path), ...content];
+
+  contentCache.set(path, contentWithDirUp);
+  return contentWithDirUp;
 }
 
 module.exports = getContent;
