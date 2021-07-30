@@ -15,7 +15,7 @@ rest api for exploring and streaming of media files (tested with flac, mp3)
 
 or create an `.env` file inside the project root
 
-`npm run run`
+`yarn start`
 
 ## Api
 
