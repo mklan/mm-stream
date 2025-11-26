@@ -22,6 +22,7 @@ app.get("/list", async (req: Request, res: Response) => {
     res.send(entries);
   } catch (e) {
     console.log(e);
+    res.status(500).send("Internal server error");
   }
 });
 

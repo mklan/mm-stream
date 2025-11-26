@@ -4,9 +4,7 @@ import path from "path";
 import * as mm from "music-metadata";
 import NodeCache from "node-cache";
 
-import { getFullPath, host, isRootFolder } from "./server-config";
-
-const rootFolder = process.env.MM_FOLDER || "./media";
+import { getFullPath, host, isRootFolder, rootFolder } from "./server-config";
 
 const contentCache = new NodeCache();
 
@@ -37,7 +35,7 @@ const isDirOrAudio = (file: fs.Dirent): boolean =>
   isDir(file) || isAudioFile(file);
 
 const sanitizePath = (filePath: string): string =>
-  encodeURIComponent(filePath.replace(rootFolder + "/", ""));
+  encodeURIComponent(filePath.replace(rootFolder + path.sep, ""));
 
 const constructContentObject =
   (currentPath: string) =>

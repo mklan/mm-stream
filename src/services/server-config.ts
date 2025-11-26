@@ -2,7 +2,12 @@ import "dotenv/config";
 import path from "path";
 import ip from "ip";
 
-const port: number = parseInt(process.env.MM_PORT || "3000", 10);
+const parsePort = (portStr: string | undefined): number => {
+  const parsed = parseInt(portStr || "3000", 10);
+  return isNaN(parsed) || parsed < 1 || parsed > 65535 ? 3000 : parsed;
+};
+
+const port: number = parsePort(process.env.MM_PORT);
 const host: string = process.env.MM_HOST || ip.address() + ":" + port;
 const rootFolder: string = process.env.MM_FOLDER || "./media";
 
