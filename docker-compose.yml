@@ -1,0 +1,12 @@
+services:
+  mm-stream:
+    build: .
+    ports:
+      - "${MM_PORT:-3000}:${MM_PORT:-3000}"
+    environment:
+      - MM_PORT=${MM_PORT:-3000}
+      - MM_FOLDER=/media
+      - MM_HOST=${MM_HOST:-localhost:3000}
+    volumes:
+      - ${MM_FOLDER:-./media}:/media:ro
+    restart: unless-stopped
