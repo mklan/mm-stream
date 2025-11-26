@@ -1,7 +1,7 @@
 import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
-import * as mm from "music-metadata";
+import mm from "music-metadata";
 import NodeCache from "node-cache";
 
 import { getFullPath, host, isRootFolder, rootFolder } from "./server-config";
@@ -45,13 +45,12 @@ const constructContentObject =
 
     const stats = await fsp.stat(filePath);
     const sanitizedPath = sanitizePath(filePath);
-
     let metadata: { title?: string; artist?: string } = {};
     if (isFile) {
-      const parsedMeta = await mm.parseFile(filePath);
+      // const parsedMeta = await mm.parseFile(filePath);
       metadata = {
-        title: parsedMeta.common.title,
-        artist: parsedMeta.common.artist,
+        //title: parsedMeta.common.title,
+        //artist: parsedMeta.common.artist,
       };
     }
 
