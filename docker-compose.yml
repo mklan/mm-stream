@@ -2,7 +2,7 @@ services:
   mm-stream:
     build: .
     ports:
-      - "${MM_PORT:-3000}:${MM_PORT:-3000}"
+      - "${MM_PORT:-3000}:3000"
     environment:
       - MM_PORT=${MM_PORT:-3000}
       - MM_FOLDER=/media

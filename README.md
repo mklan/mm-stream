@@ -53,7 +53,7 @@ docker run -d \
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `MM_PORT` | Port the service listens on | `3000` |
-| `MM_FOLDER` | Path to media folder (host path for docker-compose, `/media` inside container) | - |
+| `MM_FOLDER` | Path to media folder (host path for docker-compose, `/media` inside container) | `./media` |
 | `MM_HOST` | External host address for generating links | `localhost:3000` |
 
 ## Api
