@@ -1,6 +1,8 @@
 services:
   mm-stream:
     build: .
+    expose:
+      - ${MM_PORT:-3000}
     ports:
       - "${MM_PORT:-3000}:${MM_PORT:-3000}"
     environment:
@@ -10,3 +12,15 @@ services:
     volumes:
       - ${MM_FOLDER:-./media}:/media:ro
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.media.rule=Host(`music.klan.cc`)"
+      - "traefik.http.routers.media.entrypoints=websecure"
+      - "traefik.http.routers.media.tls.certresolver=mydns"
+      - "traefik.http.services.media.loadbalancer.server.port=1507"
+    networks:
+        - traefik
+
+networks:
+  traefik:
+    external: true
