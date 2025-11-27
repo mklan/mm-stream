@@ -8,7 +8,7 @@ services:
     environment:
       - MM_PORT=${MM_PORT:-3000}
       - MM_FOLDER=/media
-      - MM_HOST=${MM_HOST:-localhost:3000}
+      - MM_HOST=${MM_HOST:-http://localhost:3000}
     volumes:
       - ${MM_FOLDER:-./media}:/media:ro
     restart: unless-stopped

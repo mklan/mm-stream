@@ -10,7 +10,7 @@ rest api for exploring and streaming of media files (tested with flac, mp3)
   export MM_PORT=3000
   export MM_FOLDER=/path/to/media_folder
   #the host to access the service externally (to create correct links for jumping trough folders)
-  export MM_HOST=example.duckdns.org:3000
+  export MM_HOST=http://example.duckdns.org:3000
 ```
 
 or create an `.env` file inside the project root
@@ -26,7 +26,7 @@ or create an `.env` file inside the project root
 ```bash
 export MM_PORT=3000
 export MM_FOLDER=/path/to/media_folder
-export MM_HOST=example.duckdns.org:3000
+export MM_HOST=http://example.duckdns.org:3000
 ```
 
 2. Run the container:
@@ -43,7 +43,7 @@ docker run -d \
   -p 3000:3000 \
   -e MM_PORT=3000 \
   -e MM_FOLDER=/media \
-  -e MM_HOST=example.duckdns.org:3000 \
+  -e MM_HOST=http://example.duckdns.org:3000 \
   -v /path/to/media_folder:/media:ro \
   mm-stream
 ```
@@ -54,7 +54,7 @@ docker run -d \
 |----------|-------------|---------|
 | `MM_PORT` | Port the service listens on | `3000` |
 | `MM_FOLDER` | Path to media folder (host path for docker-compose, `/media` inside container) | `./media` |
-| `MM_HOST` | External host address for generating links | `localhost:3000` |
+| `MM_HOST` | External host address for generating links | `http://localhost:3000` |
 
 ## Api
 

@@ -60,7 +60,7 @@ const constructContentObject =
       name: file.name,
       metadata,
       path: sanitizedPath,
-      enter: `http://${host}/${isFile ? "stream" : "list"}?path=${sanitizedPath}`,
+      enter: `${host}/${isFile ? "stream" : "list"}?path=${sanitizedPath}`,
     };
   };
 
@@ -73,7 +73,7 @@ const createParentLink = (currentPath: string): ContentEntry[] => {
       isFile: false,
       name: "..",
       path: sanitizedPath,
-      enter: `http://${host}/list?path=${sanitizedPath}`,
+      enter: `${host}/list?path=${sanitizedPath}`,
     },
   ];
 };
