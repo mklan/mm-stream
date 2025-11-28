@@ -6,10 +6,17 @@ const validateRootPath = (
   res: Response,
   next: NextFunction
 ): void => {
-  const filePath = getFullPath(req.query.path as string);
+  const pathParam = req.query.path;
+  
+  if (typeof pathParam !== "string" && typeof pathParam !== "undefined") {
+    res.status(400).json({ error: "Invalid path parameter" });
+    return;
+  }
+
+  const filePath = getFullPath(pathParam as string | undefined);
 
   if (!insideRoot(filePath)) {
-    res.send("path is not inside the configured media folder!");
+    res.status(403).json({ error: "Access denied: path is outside the configured media folder" });
     return;
   }
   next();
