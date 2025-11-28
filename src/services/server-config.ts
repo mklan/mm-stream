@@ -8,16 +8,21 @@ const parsePort = (portStr: string | undefined): number => {
 };
 
 const port: number = parsePort(process.env.MM_PORT);
-const host: string = process.env.MM_HOST || ip.address() + ":" + port;
-const rootFolder: string = process.env.MM_FOLDER || "./media";
+const host: string = process.env.MM_HOST || `http://${ip.address()}:${port}`;
+const rootFolder: string = path.resolve(process.env.MM_FOLDER || "./media");
 
-const getFullPath = (inputPath: string = ""): string =>
-  path.normalize(path.join(rootFolder, inputPath));
+const getFullPath = (inputPath: string = ""): string => {
+  const normalizedInput = path.normalize(inputPath);
+  return path.resolve(rootFolder, normalizedInput);
+};
 
 const isRootFolder = (inputPath: string = ""): boolean =>
   path.normalize(inputPath) === ".";
 
-const insideRoot = (inputPath: string): boolean =>
-  inputPath.startsWith(rootFolder);
+const insideRoot = (inputPath: string): boolean => {
+  const resolvedPath = path.resolve(inputPath);
+  const resolvedRoot = path.resolve(rootFolder);
+  return resolvedPath.startsWith(resolvedRoot + path.sep) || resolvedPath === resolvedRoot;
+};
 
 export { port, host, rootFolder, getFullPath, insideRoot, isRootFolder };
