@@ -93,6 +93,18 @@ describe("API Integration Tests", () => {
       expect(albumEntry.enter).toContain("/list?path=");
     });
 
+    it("should have parent link with safe path (no .. traversal)", async () => {
+      const app = getApp();
+      const response = await request(app).get("/list?path=album").expect(200);
+
+      const parentEntry = response.body.find(
+        (entry: { name: string }) => entry.name === ".."
+      );
+      expect(parentEntry).toBeDefined();
+      // Parent path should not contain '..' - it should be the resolved empty path (root)
+      expect(parentEntry.path).not.toContain("..");
+    });
+
     it("should return 403 for path traversal attempt", async () => {
       const app = getApp();
       const response = await request(app)

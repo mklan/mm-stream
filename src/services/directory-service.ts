@@ -23,8 +23,32 @@ const isAudioFile = hasExtension(AUDIO_EXTENSIONS);
 const isValidEntry = (file: fs.Dirent): boolean =>
   isDirectory(file) || isAudioFile(file);
 
+/**
+ * Converts an absolute file path to a URL-safe relative path.
+ * Returns empty string (root) for any paths outside the root folder.
+ * This is a defensive measure - paths should already be validated by middleware.
+ */
 const sanitizePath = (filePath: string): string => {
   const relativePath = path.relative(rootFolder, filePath);
+  // Ensure the path doesn't start with '..' to prevent path traversal
+  if (relativePath.startsWith("..")) {
+    return "";
+  }
+  return encodeURIComponent(relativePath);
+};
+
+/**
+ * Gets the parent directory path relative to root folder.
+ * Returns empty string (root) if parent would be outside the root folder.
+ */
+const getParentPath = (currentPath: string): string => {
+  const fullPath = getFullPath(currentPath);
+  const parentPath = path.dirname(fullPath);
+  const relativePath = path.relative(rootFolder, parentPath);
+  // Return empty string if we would go outside the root
+  if (relativePath.startsWith("..")) {
+    return "";
+  }
   return encodeURIComponent(relativePath);
 };
 
@@ -60,14 +84,14 @@ const createParentLink = (currentPath: string): ContentEntry[] => {
     return [];
   }
 
-  const sanitizedPath = `${sanitizePath(getFullPath(currentPath))}/..`;
+  const parentPath = getParentPath(currentPath);
 
   return [
     {
       isFile: false,
       name: "..",
-      path: sanitizedPath,
-      enter: `${host}/list?path=${sanitizedPath}`,
+      path: parentPath,
+      enter: `${host}/list?path=${parentPath}`,
     },
   ];
 };
