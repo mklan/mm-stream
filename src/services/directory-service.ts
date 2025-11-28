@@ -3,7 +3,12 @@ import fsp from "fs/promises";
 import path from "path";
 import NodeCache from "node-cache";
 
-import { getFullPath, host, isRootFolder, rootFolder } from "./server-config";
+import {
+  getFullPath,
+  baseUrl,
+  isRootFolder,
+  rootFolder,
+} from "./server-config";
 import { ContentEntry, ContentMetadata } from "../types/content";
 
 const CACHE_TTL_SECONDS = 300; // 5 minutes
@@ -54,7 +59,7 @@ const getParentPath = (currentPath: string): string => {
 
 const buildEntryUrl = (isFile: boolean, sanitizedPath: string): string => {
   const endpoint = isFile ? "stream" : "list";
-  return `${host}/${endpoint}?path=${sanitizedPath}`;
+  return `${baseUrl}/${endpoint}?path=${sanitizedPath}`;
 };
 
 const createContentEntry = async (
@@ -91,14 +96,14 @@ const createParentLink = (currentPath: string): ContentEntry[] => {
       isFile: false,
       name: "..",
       path: parentPath,
-      enter: `${host}/list?path=${parentPath}`,
+      enter: `${baseUrl}/list?path=${parentPath}`,
     },
   ];
 };
 
 async function getContent(currentPath: string = ""): Promise<ContentEntry[]> {
   const normalizedPath = currentPath || "";
-  
+
   const cachedContent = contentCache.get<ContentEntry[]>(normalizedPath);
   if (cachedContent) {
     return cachedContent;
@@ -113,7 +118,10 @@ async function getContent(currentPath: string = ""): Promise<ContentEntry[]> {
   );
   const content = await Promise.all(contentPromises);
 
-  const contentWithParentLink = [...createParentLink(normalizedPath), ...content];
+  const contentWithParentLink = [
+    ...createParentLink(normalizedPath),
+    ...content,
+  ];
 
   contentCache.set(normalizedPath, contentWithParentLink);
   return contentWithParentLink;

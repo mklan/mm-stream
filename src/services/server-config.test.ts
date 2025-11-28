@@ -52,18 +52,18 @@ describe("server-config", () => {
     });
   });
 
-  describe("host", () => {
+  describe("baseUrl", () => {
     it("should use MM_HOST when set", () => {
       process.env.MM_HOST = "http://example.com:3000";
-      const { host } = require("./server-config");
-      expect(host).toBe("http://example.com:3000");
+      const { baseUrl } = require("./server-config");
+      expect(baseUrl).toBe("http://example.com:3000");
     });
 
-    it("should generate host from IP when MM_HOST is not set", () => {
+    it("should generate baseUrl from IP when MM_HOST is not set", () => {
       delete process.env.MM_HOST;
       delete process.env.MM_PORT;
-      const { host } = require("./server-config");
-      expect(host).toBe("http://192.168.1.100:3000");
+      const { baseUrl } = require("./server-config");
+      expect(baseUrl).toBe("http://192.168.1.100:3000");
     });
   });
 
