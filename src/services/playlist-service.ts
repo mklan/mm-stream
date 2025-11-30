@@ -81,3 +81,88 @@ export async function getPlaylist(name: string): Promise<PlaylistTrack[]> {
     .sort(([a], [b]) => a - b)
     .map(([, track]) => track);
 }
+
+/**
+ * Writes tracks to a PLS playlist file
+ */
+async function writePlaylist(
+  name: string,
+  tracks: PlaylistTrack[]
+): Promise<void> {
+  // Sanitize the playlist name to prevent path traversal
+  const sanitizedName = path.basename(name, ".pls");
+  const playlistPath = path.join(playlistFolder, `${sanitizedName}.pls`);
+
+  // Ensure playlist folder exists
+  await fsp.mkdir(playlistFolder, { recursive: true });
+
+  // Build PLS content
+  const lines = ["[playlist]"];
+
+  tracks.forEach((track, index) => {
+    const trackNum = index + 1;
+    lines.push(`File${trackNum}=${track.file}`);
+    if (track.title) {
+      lines.push(`Title${trackNum}=${track.title}`);
+    }
+    if (track.length) {
+      lines.push(`Length${trackNum}=${track.length}`);
+    }
+  });
+
+  lines.push(`NumberOfEntries=${tracks.length}`);
+  lines.push("Version=2");
+  lines.push(""); // Empty line at the end
+
+  // Write to file
+  await fsp.writeFile(playlistPath, lines.join("\n"), "utf-8");
+}
+
+/**
+ * Adds tracks to an existing playlist or creates a new one
+ */
+export async function addTracksToPlaylist(
+  name: string,
+  newTracks: PlaylistTrack[]
+): Promise<PlaylistTrack[]> {
+  let existingTracks: PlaylistTrack[] = [];
+
+  try {
+    existingTracks = await getPlaylist(name);
+  } catch (error) {
+    // Playlist doesn't exist yet, that's okay
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  // Combine existing and new tracks
+  const allTracks = [...existingTracks, ...newTracks];
+
+  await writePlaylist(name, allTracks);
+
+  return allTracks;
+}
+
+/**
+ * Removes a track from a playlist by index
+ */
+export async function removeTrackFromPlaylist(
+  name: string,
+  trackIndex: number
+): Promise<PlaylistTrack[]> {
+  const tracks = await getPlaylist(name);
+
+  if (trackIndex < 0 || trackIndex >= tracks.length) {
+    throw new Error(
+      `Track index ${trackIndex} is out of range (0-${tracks.length - 1})`
+    );
+  }
+
+  // Remove the track at the specified index
+  tracks.splice(trackIndex, 1);
+
+  await writePlaylist(name, tracks);
+
+  return tracks;
+}

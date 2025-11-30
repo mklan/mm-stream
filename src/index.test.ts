@@ -255,4 +255,117 @@ NumberOfEntries=2`
       expect(response.body).toHaveLength(1);
     });
   });
+
+  describe("POST /playlist/:name", () => {
+    it("should create a new playlist with tracks", async () => {
+      const app = getApp();
+      const tracks = [
+        { file: "/album/song.mp3", title: "Test Song", length: "180" },
+      ];
+
+      const response = await request(app)
+        .post("/playlist/newtest")
+        .send(tracks)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0]).toMatchObject(tracks[0]);
+
+      // Verify it was created
+      const getResponse = await request(app)
+        .get("/playlist/newtest")
+        .expect(200);
+      expect(getResponse.body).toEqual(tracks);
+    });
+
+    it("should append tracks to existing playlist", async () => {
+      const app = getApp();
+      const newTracks = [{ file: "/album/audio.ogg", title: "New Song" }];
+
+      const response = await request(app)
+        .post("/playlist/favorites")
+        .send(newTracks)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(2); // 1 existing + 1 new
+      expect(response.body[1].file).toBe("/album/audio.ogg");
+    });
+
+    it("should return 400 for non-array request body", async () => {
+      const app = getApp();
+      const response = await request(app)
+        .post("/playlist/test")
+        .send({ file: "/song.mp3" })
+        .expect(400);
+
+      expect(response.body.error).toContain("array");
+    });
+
+    it("should handle tracks without optional fields", async () => {
+      const app = getApp();
+      const tracks = [{ file: "/album/track.flac" }];
+
+      const response = await request(app)
+        .post("/playlist/minimal")
+        .send(tracks)
+        .expect(200);
+
+      expect(response.body[0]).toEqual({ file: "/album/track.flac" });
+    });
+  });
+
+  describe("DELETE /playlist/:name/track/:index", () => {
+    it("should remove a track by index", async () => {
+      const app = getApp();
+
+      const response = await request(app)
+        .delete("/playlist/rock/track/0")
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].file).toBe("/album/audio.ogg");
+    });
+
+    it("should remove the last track from single-track playlist", async () => {
+      const app = getApp();
+
+      // Create a new single-track playlist
+      await request(app)
+        .post("/playlist/deletetest")
+        .send([{ file: "/album/song.mp3" }])
+        .expect(200);
+
+      const response = await request(app)
+        .delete("/playlist/deletetest/track/0")
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(0);
+    });
+
+    it("should return 400 for invalid index (non-numeric)", async () => {
+      const app = getApp();
+
+      const response = await request(app)
+        .delete("/playlist/favorites/track/invalid")
+        .expect(400);
+
+      expect(response.body.error).toContain("valid number");
+    });
+
+    it("should return 500 for index out of range", async () => {
+      const app = getApp();
+
+      await request(app).delete("/playlist/favorites/track/999").expect(500);
+    });
+
+    it("should return 500 for non-existent playlist", async () => {
+      const app = getApp();
+
+      await request(app).delete("/playlist/nonexistent/track/0").expect(500);
+    });
+  });
 });
