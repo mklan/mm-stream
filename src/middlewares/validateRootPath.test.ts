@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import validateRootPath from "./validateRootPath";
 
 // Mock server-config module
-jest.mock("../services/server-config", () => ({
-  getFullPath: jest.fn((input: string = "") => `/media/${input}`),
-  insideRoot: jest.fn((path: string) => path.startsWith("/media")),
+vi.mock("../services/server-config", () => ({
+  getFullPath: vi.fn((input: string = "") => `/media/${input}`),
+  insideRoot: vi.fn((path: string) => path.startsWith("/media")),
 }));
 
 import { getFullPath, insideRoot } from "../services/server-config";
@@ -13,12 +13,12 @@ describe("validateRootPath middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
-  let jsonMock: jest.Mock;
-  let statusMock: jest.Mock;
+  let jsonMock: any;
+  let statusMock: any;
 
   beforeEach(() => {
-    jsonMock = jest.fn();
-    statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    jsonMock = vi.fn();
+    statusMock = vi.fn().mockReturnValue({ json: jsonMock });
 
     mockRequest = {
       query: {},
@@ -27,18 +27,18 @@ describe("validateRootPath middleware", () => {
       status: statusMock,
       json: jsonMock,
     };
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
-    // Reset mocks
-    jest.clearAllMocks();
-    (insideRoot as jest.Mock).mockImplementation((path: string) =>
+    // Reset mock behavior
+    vi.clearAllMocks();
+    (insideRoot as any).mockImplementation((path: string) =>
       path.startsWith("/media")
     );
   });
 
   it("should call next() when path is inside root", () => {
     mockRequest.query = { path: "album" };
-    (getFullPath as jest.Mock).mockReturnValue("/media/album");
+    (getFullPath as any).mockReturnValue("/media/album");
 
     validateRootPath(
       mockRequest as Request,
@@ -52,7 +52,7 @@ describe("validateRootPath middleware", () => {
 
   it("should call next() when no path is provided", () => {
     mockRequest.query = {};
-    (getFullPath as jest.Mock).mockReturnValue("/media");
+    (getFullPath as any).mockReturnValue("/media");
 
     validateRootPath(
       mockRequest as Request,
@@ -65,8 +65,8 @@ describe("validateRootPath middleware", () => {
 
   it("should return 403 when path is outside root", () => {
     mockRequest.query = { path: "../etc/passwd" };
-    (getFullPath as jest.Mock).mockReturnValue("/etc/passwd");
-    (insideRoot as jest.Mock).mockReturnValue(false);
+    (getFullPath as any).mockReturnValue("/etc/passwd");
+    (insideRoot as any).mockReturnValue(false);
 
     validateRootPath(
       mockRequest as Request,

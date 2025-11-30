@@ -15,7 +15,7 @@ describe("playlist-service", () => {
     process.env.MM_PLAYLIST_FOLDER = testPlaylistFolder;
 
     // Clear module cache to reset config between tests
-    jest.resetModules();
+    vi.resetModules();
 
     // Create test directory
     try {
@@ -45,7 +45,7 @@ describe("playlist-service", () => {
   describe("getPlaylists", () => {
     it("should return empty array when playlist folder does not exist", async () => {
       await fsp.rmdir(testPlaylistFolder);
-      const { getPlaylists } = require("./playlist-service");
+      const { getPlaylists } = await import("./playlist-service");
       const playlists = await getPlaylists();
       expect(playlists).toEqual([]);
     });
@@ -64,7 +64,7 @@ describe("playlist-service", () => {
         "not a playlist"
       );
 
-      const { getPlaylists } = require("./playlist-service");
+      const { getPlaylists } = await import("./playlist-service");
       const playlists = await getPlaylists();
       expect(playlists).toEqual(
         expect.arrayContaining(["playlist1", "playlist2"])
@@ -73,7 +73,7 @@ describe("playlist-service", () => {
     });
 
     it("should handle empty playlist folder", async () => {
-      const { getPlaylists } = require("./playlist-service");
+      const { getPlaylists } = await import("./playlist-service");
       const playlists = await getPlaylists();
       expect(playlists).toEqual([]);
     });
@@ -88,7 +88,7 @@ describe("playlist-service", () => {
         "[playlist]"
       );
 
-      const { getPlaylists } = require("./playlist-service");
+      const { getPlaylists } = await import("./playlist-service");
       const playlists = await getPlaylists();
       expect(playlists).toHaveLength(2);
     });
@@ -110,7 +110,7 @@ NumberOfEntries=2`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       const tracks = await getPlaylist("test");
       expect(tracks).toHaveLength(2);
       expect(tracks[0]).toEqual({
@@ -135,7 +135,7 @@ NumberOfEntries=1`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       const tracks = await getPlaylist("minimal");
       expect(tracks).toHaveLength(1);
       expect(tracks[0]).toEqual({
@@ -152,7 +152,7 @@ File1=/song.mp3`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       // Try to access with path traversal
       const tracks = await getPlaylist("../safe");
       expect(tracks).toHaveLength(1);
@@ -168,13 +168,13 @@ File1=/song.mp3`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       const tracks = await getPlaylist("test.pls");
       expect(tracks).toHaveLength(1);
     });
 
     it("should throw error for non-existent playlist", async () => {
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       await expect(getPlaylist("nonexistent")).rejects.toThrow();
     });
 
@@ -186,7 +186,7 @@ File1=/song.mp3`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       const tracks = await getPlaylist("windows");
       expect(tracks).toHaveLength(1);
       expect(tracks[0].file).toBe("/song.mp3");
@@ -206,7 +206,7 @@ NumberOfEntries=1`;
         plsContent
       );
 
-      const { getPlaylist } = require("./playlist-service");
+      const { getPlaylist } = await import("./playlist-service");
       const tracks = await getPlaylist("whitespace");
       expect(tracks).toHaveLength(1);
       expect(tracks[0].file).toBe("/song.mp3");
@@ -215,10 +215,9 @@ NumberOfEntries=1`;
 
   describe("addTracksToPlaylist", () => {
     it("should create a new playlist with tracks", async () => {
-      const {
-        addTracksToPlaylist,
-        getPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
       const newTracks = [
         { file: "/album/song1.mp3", title: "Song 1", length: "180" },
         { file: "/album/song2.mp3", title: "Song 2", length: "240" },
@@ -234,10 +233,9 @@ NumberOfEntries=1`;
     });
 
     it("should append tracks to existing playlist", async () => {
-      const {
-        addTracksToPlaylist,
-        getPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
 
       // Create initial playlist
       const initialTracks = [{ file: "/album/song1.mp3", title: "Song 1" }];
@@ -253,10 +251,9 @@ NumberOfEntries=1`;
     });
 
     it("should handle tracks without optional fields", async () => {
-      const {
-        addTracksToPlaylist,
-        getPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
       const newTracks = [{ file: "/album/song.mp3" }];
 
       await addTracksToPlaylist("minimal", newTracks);
@@ -268,7 +265,7 @@ NumberOfEntries=1`;
 
     it("should create playlist folder if it doesn't exist", async () => {
       await fsp.rmdir(testPlaylistFolder);
-      const { addTracksToPlaylist } = require("./playlist-service");
+      const { addTracksToPlaylist } = await import("./playlist-service");
 
       const newTracks = [{ file: "/song.mp3" }];
       await addTracksToPlaylist("test", newTracks);
@@ -280,10 +277,9 @@ NumberOfEntries=1`;
 
   describe("removeTrackFromPlaylist", () => {
     it("should remove a track by index", async () => {
-      const {
-        addTracksToPlaylist,
-        removeTrackFromPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, removeTrackFromPlaylist } = await import(
+        "./playlist-service"
+      );
 
       const tracks = [
         { file: "/song1.mp3", title: "Song 1" },
@@ -299,10 +295,9 @@ NumberOfEntries=1`;
     });
 
     it("should remove first track", async () => {
-      const {
-        addTracksToPlaylist,
-        removeTrackFromPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, removeTrackFromPlaylist } = await import(
+        "./playlist-service"
+      );
 
       const tracks = [{ file: "/song1.mp3" }, { file: "/song2.mp3" }];
       await addTracksToPlaylist("test", tracks);
@@ -313,10 +308,9 @@ NumberOfEntries=1`;
     });
 
     it("should remove last track", async () => {
-      const {
-        addTracksToPlaylist,
-        removeTrackFromPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, removeTrackFromPlaylist } = await import(
+        "./playlist-service"
+      );
 
       const tracks = [{ file: "/song1.mp3" }, { file: "/song2.mp3" }];
       await addTracksToPlaylist("test", tracks);
@@ -327,10 +321,9 @@ NumberOfEntries=1`;
     });
 
     it("should throw error for invalid index (negative)", async () => {
-      const {
-        addTracksToPlaylist,
-        removeTrackFromPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, removeTrackFromPlaylist } = await import(
+        "./playlist-service"
+      );
 
       const tracks = [{ file: "/song1.mp3" }];
       await addTracksToPlaylist("test", tracks);
@@ -341,10 +334,9 @@ NumberOfEntries=1`;
     });
 
     it("should throw error for invalid index (too large)", async () => {
-      const {
-        addTracksToPlaylist,
-        removeTrackFromPlaylist,
-      } = require("./playlist-service");
+      const { addTracksToPlaylist, removeTrackFromPlaylist } = await import(
+        "./playlist-service"
+      );
 
       const tracks = [{ file: "/song1.mp3" }];
       await addTracksToPlaylist("test", tracks);
@@ -355,7 +347,7 @@ NumberOfEntries=1`;
     });
 
     it("should throw error for non-existent playlist", async () => {
-      const { removeTrackFromPlaylist } = require("./playlist-service");
+      const { removeTrackFromPlaylist } = await import("./playlist-service");
 
       await expect(removeTrackFromPlaylist("nonexistent", 0)).rejects.toThrow();
     });
@@ -363,7 +355,9 @@ NumberOfEntries=1`;
 
   describe("createPlaylist", () => {
     it("should create a new empty playlist", async () => {
-      const { createPlaylist, getPlaylist } = require("./playlist-service");
+      const { createPlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
 
       await createPlaylist("newempty");
 
@@ -372,7 +366,7 @@ NumberOfEntries=1`;
     });
 
     it("should create playlist file with proper format", async () => {
-      const { createPlaylist } = require("./playlist-service");
+      const { createPlaylist } = await import("./playlist-service");
 
       await createPlaylist("formatted");
 
@@ -386,7 +380,7 @@ NumberOfEntries=1`;
     });
 
     it("should throw error if playlist already exists", async () => {
-      const { createPlaylist } = require("./playlist-service");
+      const { createPlaylist } = await import("./playlist-service");
 
       await createPlaylist("duplicate");
 
@@ -396,7 +390,9 @@ NumberOfEntries=1`;
     });
 
     it("should sanitize playlist name", async () => {
-      const { createPlaylist, getPlaylist } = require("./playlist-service");
+      const { createPlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
 
       await createPlaylist("../safe");
 
@@ -407,7 +403,7 @@ NumberOfEntries=1`;
 
     it("should create playlist folder if it doesn't exist", async () => {
       await fsp.rmdir(testPlaylistFolder);
-      const { createPlaylist } = require("./playlist-service");
+      const { createPlaylist } = await import("./playlist-service");
 
       await createPlaylist("test");
 
@@ -418,7 +414,9 @@ NumberOfEntries=1`;
 
   describe("deletePlaylist", () => {
     it("should delete an existing playlist", async () => {
-      const { createPlaylist, deletePlaylist } = require("./playlist-service");
+      const { createPlaylist, deletePlaylist } = await import(
+        "./playlist-service"
+      );
 
       await createPlaylist("todelete");
       await deletePlaylist("todelete");
@@ -432,13 +430,15 @@ NumberOfEntries=1`;
     });
 
     it("should throw error for non-existent playlist", async () => {
-      const { deletePlaylist } = require("./playlist-service");
+      const { deletePlaylist } = await import("./playlist-service");
 
       await expect(deletePlaylist("nonexistent")).rejects.toThrow();
     });
 
     it("should sanitize playlist name", async () => {
-      const { createPlaylist, deletePlaylist } = require("./playlist-service");
+      const { createPlaylist, deletePlaylist } = await import(
+        "./playlist-service"
+      );
 
       await createPlaylist("deletesafe");
       await deletePlaylist("../deletesafe");

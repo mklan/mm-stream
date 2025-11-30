@@ -58,17 +58,18 @@ afterAll(() => {
 });
 
 // Import app after setting up environment
-// Use require to ensure environment is set first
-const getApp = () => {
+// Use dynamic import to ensure environment is set first
+const getApp = async () => {
   // Clear module cache to ensure fresh app with test environment
-  jest.resetModules();
-  return require("./index").app;
+  vi.resetModules();
+  const module = await import("./index");
+  return module.app;
 };
 
 describe("API Integration Tests", () => {
   describe("GET /list", () => {
     it("should list contents of root folder", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/list").expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -81,7 +82,7 @@ describe("API Integration Tests", () => {
     });
 
     it("should list contents of subdirectory", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/list?path=album").expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -96,7 +97,7 @@ describe("API Integration Tests", () => {
     });
 
     it("should include correct metadata for files", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/list?path=album").expect(200);
 
       const mp3Entry = response.body.find(
@@ -109,7 +110,7 @@ describe("API Integration Tests", () => {
     });
 
     it("should include correct enter URL for directories", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/list").expect(200);
 
       const albumEntry = response.body.find(
@@ -119,7 +120,7 @@ describe("API Integration Tests", () => {
     });
 
     it("should have parent link with safe path (no .. traversal)", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/list?path=album").expect(200);
 
       const parentEntry = response.body.find(
@@ -131,7 +132,7 @@ describe("API Integration Tests", () => {
     });
 
     it("should return 403 for path traversal attempt", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app)
         .get("/list?path=../etc/passwd")
         .expect(403);
@@ -142,14 +143,14 @@ describe("API Integration Tests", () => {
     });
 
     it("should return 500 for non-existent path", async () => {
-      const app = getApp();
+      const app = await getApp();
       await request(app).get("/list?path=nonexistent").expect(500);
     });
   });
 
   describe("GET /stream", () => {
     it("should return 403 for path traversal attempt", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app)
         .get("/stream?path=../etc/passwd")
         .expect(403);
@@ -162,7 +163,7 @@ describe("API Integration Tests", () => {
 
   describe("GET /playlists", () => {
     it("should return list of playlist names", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/playlists").expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -175,7 +176,7 @@ describe("API Integration Tests", () => {
       // Remove playlist files temporarily
       fs.rmSync(testPlaylistDir, { recursive: true, force: true });
 
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/playlists").expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -205,7 +206,7 @@ NumberOfEntries=2`
 
   describe("GET /playlist/:name", () => {
     it("should return tracks from a playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app)
         .get("/playlist/favorites")
         .expect(200);
@@ -220,7 +221,7 @@ NumberOfEntries=2`
     });
 
     it("should return multiple tracks from a playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app).get("/playlist/rock").expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -230,7 +231,7 @@ NumberOfEntries=2`
     });
 
     it("should handle playlist name with .pls extension", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app)
         .get("/playlist/favorites.pls")
         .expect(200);
@@ -240,12 +241,12 @@ NumberOfEntries=2`
     });
 
     it("should return 500 for non-existent playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
       await request(app).get("/playlist/nonexistent").expect(500);
     });
 
     it("should sanitize playlist name to prevent path traversal", async () => {
-      const app = getApp();
+      const app = await getApp();
       // Path traversal in the param is sanitized by path.basename
       const response = await request(app)
         .get("/playlist/..%2Ffavorites")
@@ -258,7 +259,7 @@ NumberOfEntries=2`
 
   describe("POST /playlist/:name", () => {
     it("should create a new playlist with tracks", async () => {
-      const app = getApp();
+      const app = await getApp();
       const tracks = [
         { file: "/album/song.mp3", title: "Test Song", length: "180" },
       ];
@@ -280,7 +281,7 @@ NumberOfEntries=2`
     });
 
     it("should append tracks to existing playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
       const newTracks = [{ file: "/album/audio.ogg", title: "New Song" }];
 
       const response = await request(app)
@@ -294,7 +295,7 @@ NumberOfEntries=2`
     });
 
     it("should return 400 for non-array request body", async () => {
-      const app = getApp();
+      const app = await getApp();
       const response = await request(app)
         .post("/playlist/test")
         .send({ file: "/song.mp3" })
@@ -304,7 +305,7 @@ NumberOfEntries=2`
     });
 
     it("should handle tracks without optional fields", async () => {
-      const app = getApp();
+      const app = await getApp();
       const tracks = [{ file: "/album/track.flac" }];
 
       const response = await request(app)
@@ -318,7 +319,7 @@ NumberOfEntries=2`
 
   describe("DELETE /playlist/:name/track/:index", () => {
     it("should remove a track by index", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       const response = await request(app)
         .delete("/playlist/rock/track/0")
@@ -330,7 +331,7 @@ NumberOfEntries=2`
     });
 
     it("should remove the last track from single-track playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       // Create a new single-track playlist
       await request(app)
@@ -347,7 +348,7 @@ NumberOfEntries=2`
     });
 
     it("should return 400 for invalid index (non-numeric)", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       const response = await request(app)
         .delete("/playlist/favorites/track/invalid")
@@ -357,13 +358,13 @@ NumberOfEntries=2`
     });
 
     it("should return 500 for index out of range", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       await request(app).delete("/playlist/favorites/track/999").expect(500);
     });
 
     it("should return 500 for non-existent playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       await request(app).delete("/playlist/nonexistent/track/0").expect(500);
     });
@@ -371,7 +372,7 @@ NumberOfEntries=2`
 
   describe("PUT /playlist/:name", () => {
     it("should create a new empty playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       const response = await request(app)
         .put("/playlist/newemptylist")
@@ -387,13 +388,13 @@ NumberOfEntries=2`
     });
 
     it("should return 500 if playlist already exists", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       await request(app).put("/playlist/favorites").expect(500);
     });
 
     it("should sanitize playlist name", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       const response = await request(app)
         .put("/playlist/..%2Fsafecreate")
@@ -411,7 +412,7 @@ NumberOfEntries=2`
 
   describe("DELETE /playlist/:name", () => {
     it("should delete an existing playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       // Create a playlist to delete
       await request(app).put("/playlist/todelete").expect(201);
@@ -427,13 +428,13 @@ NumberOfEntries=2`
     });
 
     it("should return 500 for non-existent playlist", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       await request(app).delete("/playlist/nonexistent").expect(500);
     });
 
     it("should sanitize playlist name", async () => {
-      const app = getApp();
+      const app = await getApp();
 
       // Create a playlist to delete
       await request(app).put("/playlist/safedelete").expect(201);
