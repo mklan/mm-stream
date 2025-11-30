@@ -5,6 +5,7 @@ import ms from "mediaserver";
 import validateRootPath from "./middlewares/validateRootPath";
 import getContent from "./services/directory-service";
 import { port, getFullPath } from "./services/server-config";
+import { getPlaylists, getPlaylist } from "./services/playlist-service";
 
 const app = express();
 
@@ -26,6 +27,31 @@ app.get("/list", async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 });
+
+app.get(
+  "/playlists",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playlists = await getPlaylists();
+      res.json(playlists);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.get(
+  "/playlist/:name",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playlistName = req.params.name;
+      const tracks = await getPlaylist(playlistName);
+      res.json(tracks);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

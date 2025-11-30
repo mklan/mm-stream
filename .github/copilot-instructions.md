@@ -38,16 +38,19 @@ mm-stream/
 ### Building and Running
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Set required environment variables:
+
    - `MM_PORT` - Port number (default: 3000)
    - `MM_FOLDER` - Path to the media folder (default: ./media)
    - `MM_HOST` - External host address for generating links
 
 3. Development mode (with hot reload):
+
    ```bash
    npm run dev
    ```
@@ -98,18 +101,32 @@ The Dockerfile uses multi-stage builds for optimal image size:
 - Run with Docker Compose: `docker compose up -d`
 - The container uses Node.js 18 Alpine image for minimal footprint
 
-### Testing Changes
+### Testing and Validation Workflow
 
-When making changes:
-1. Run `npm run build` to ensure TypeScript compiles without errors
-2. Ensure the application starts without errors
-3. Test the `/list` endpoint with various paths
-4. Test the `/stream` endpoint with actual media files
-5. Verify path validation prevents directory traversal
+**ALWAYS follow this workflow after making any code changes:**
+
+1. Run `npm test` to execute the test suite
+2. Run `npm run build` to ensure TypeScript compiles without errors
+3. If tests or build fail:
+   - Analyze the error messages
+   - Fix the issues
+   - Re-run tests and build until they pass
+4. Ensure the application starts without errors
+5. Test the `/list` endpoint with various paths
+6. Test the `/stream` endpoint with actual media files
+7. Verify path validation prevents directory traversal
+
+**When implementing new features:**
+
+- Always write tests for new functionality
+- Follow the existing test patterns in `*.test.ts` files
+- Test both success and error cases
+- Ensure tests are passing before considering the feature complete
 
 ### Dependencies
 
 Runtime dependencies:
+
 - `express` - Web framework
 - `cors` - CORS middleware
 - `mediaserver` - Media file streaming
@@ -119,6 +136,7 @@ Runtime dependencies:
 - `ip` - IP address utilities for host detection
 
 Dev dependencies:
+
 - `typescript` - TypeScript compiler
 - `ts-node-dev` - Development server with hot reload
 - `@types/*` - TypeScript type definitions for dependencies

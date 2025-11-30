@@ -4,10 +4,12 @@ import fs from "fs";
 
 // Set up test environment before importing app
 const testMediaDir = path.join(__dirname, "__test_media__");
+const testPlaylistDir = path.join(__dirname, "__test_playlists__");
 
 beforeAll(() => {
   // Set environment variables for testing
   process.env.MM_FOLDER = testMediaDir;
+  process.env.MM_PLAYLIST_FOLDER = testPlaylistDir;
   process.env.MM_HOST = "http://localhost:3000";
   process.env.MM_PORT = "3000";
 
@@ -25,11 +27,34 @@ beforeAll(() => {
   fs.writeFileSync(path.join(albumDir, "track.flac"), "fake flac content");
   fs.writeFileSync(path.join(albumDir, "audio.ogg"), "fake ogg content");
   fs.writeFileSync(path.join(albumDir, "readme.txt"), "not an audio file");
+
+  // Create test playlist directory and files
+  if (!fs.existsSync(testPlaylistDir)) {
+    fs.mkdirSync(testPlaylistDir, { recursive: true });
+  }
+  fs.writeFileSync(
+    path.join(testPlaylistDir, "favorites.pls"),
+    `[playlist]
+File1=/album/song.mp3
+Title1=Favorite Song
+Length1=180
+NumberOfEntries=1`
+  );
+  fs.writeFileSync(
+    path.join(testPlaylistDir, "rock.pls"),
+    `[playlist]
+File1=/album/track.flac
+Title1=Rock Track
+File2=/album/audio.ogg
+Title2=Another Rock Song
+NumberOfEntries=2`
+  );
 });
 
 afterAll(() => {
-  // Clean up test directory
+  // Clean up test directories
   fs.rmSync(testMediaDir, { recursive: true, force: true });
+  fs.rmSync(testPlaylistDir, { recursive: true, force: true });
 });
 
 // Import app after setting up environment
@@ -111,7 +136,9 @@ describe("API Integration Tests", () => {
         .get("/list?path=../etc/passwd")
         .expect(403);
 
-      expect(response.body.error).toContain("outside the configured media folder");
+      expect(response.body.error).toContain(
+        "outside the configured media folder"
+      );
     });
 
     it("should return 500 for non-existent path", async () => {
@@ -127,7 +154,105 @@ describe("API Integration Tests", () => {
         .get("/stream?path=../etc/passwd")
         .expect(403);
 
-      expect(response.body.error).toContain("outside the configured media folder");
+      expect(response.body.error).toContain(
+        "outside the configured media folder"
+      );
+    });
+  });
+
+  describe("GET /playlists", () => {
+    it("should return list of playlist names", async () => {
+      const app = getApp();
+      const response = await request(app).get("/playlists").expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toContain("favorites");
+      expect(response.body).toContain("rock");
+      expect(response.body).toHaveLength(2);
+    });
+
+    it("should return empty array when no playlists exist", async () => {
+      // Remove playlist files temporarily
+      fs.rmSync(testPlaylistDir, { recursive: true, force: true });
+
+      const app = getApp();
+      const response = await request(app).get("/playlists").expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(0);
+
+      // Restore playlist directory for other tests
+      fs.mkdirSync(testPlaylistDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(testPlaylistDir, "favorites.pls"),
+        `[playlist]
+File1=/album/song.mp3
+Title1=Favorite Song
+Length1=180
+NumberOfEntries=1`
+      );
+      fs.writeFileSync(
+        path.join(testPlaylistDir, "rock.pls"),
+        `[playlist]
+File1=/album/track.flac
+Title1=Rock Track
+File2=/album/audio.ogg
+Title2=Another Rock Song
+NumberOfEntries=2`
+      );
+    });
+  });
+
+  describe("GET /playlist/:name", () => {
+    it("should return tracks from a playlist", async () => {
+      const app = getApp();
+      const response = await request(app)
+        .get("/playlist/favorites")
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0]).toMatchObject({
+        file: "/album/song.mp3",
+        title: "Favorite Song",
+        length: "180",
+      });
+    });
+
+    it("should return multiple tracks from a playlist", async () => {
+      const app = getApp();
+      const response = await request(app).get("/playlist/rock").expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(2);
+      expect(response.body[0].file).toBe("/album/track.flac");
+      expect(response.body[1].file).toBe("/album/audio.ogg");
+    });
+
+    it("should handle playlist name with .pls extension", async () => {
+      const app = getApp();
+      const response = await request(app)
+        .get("/playlist/favorites.pls")
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
+    });
+
+    it("should return 500 for non-existent playlist", async () => {
+      const app = getApp();
+      await request(app).get("/playlist/nonexistent").expect(500);
+    });
+
+    it("should sanitize playlist name to prevent path traversal", async () => {
+      const app = getApp();
+      // Path traversal in the param is sanitized by path.basename
+      const response = await request(app)
+        .get("/playlist/..%2Ffavorites")
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
     });
   });
 });

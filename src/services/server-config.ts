@@ -10,6 +10,9 @@ const parsePort = (portStr: string | undefined): number => {
 const port: number = parsePort(process.env.MM_PORT);
 const baseUrl: string = process.env.MM_HOST || `http://${ip.address()}:${port}`;
 const rootFolder: string = path.resolve(process.env.MM_FOLDER || "./media");
+const playlistFolder: string = path.resolve(
+  process.env.MM_PLAYLIST_FOLDER || "./playlists"
+);
 
 const getFullPath = (inputPath: string = ""): string => {
   // Remove leading slashes to treat all paths as relative to rootFolder
@@ -30,4 +33,12 @@ const insideRoot = (inputPath: string): boolean => {
   );
 };
 
-export { port, baseUrl, rootFolder, getFullPath, insideRoot, isRootFolder };
+export {
+  port,
+  baseUrl,
+  rootFolder,
+  playlistFolder,
+  getFullPath,
+  insideRoot,
+  isRootFolder,
+};
