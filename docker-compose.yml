@@ -10,7 +10,7 @@ services:
       - MM_FOLDER=/media
       - MM_HOST=${MM_HOST:-http://localhost:3000}
     volumes:
-      - ${MM_FOLDER:-./media}:/media:ro
+      - ${MM_FOLDER:-./media}:/media
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
