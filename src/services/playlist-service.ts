@@ -166,3 +166,36 @@ export async function removeTrackFromPlaylist(
 
   return tracks;
 }
+
+/**
+ * Creates a new empty playlist
+ */
+export async function createPlaylist(name: string): Promise<void> {
+  // Sanitize the playlist name to prevent path traversal
+  const sanitizedName = path.basename(name, ".pls");
+  const playlistPath = path.join(playlistFolder, `${sanitizedName}.pls`);
+
+  // Check if playlist already exists
+  try {
+    await fsp.access(playlistPath);
+    throw new Error(`Playlist "${sanitizedName}" already exists`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  // Create empty playlist
+  await writePlaylist(name, []);
+}
+
+/**
+ * Deletes a playlist file
+ */
+export async function deletePlaylist(name: string): Promise<void> {
+  // Sanitize the playlist name to prevent path traversal
+  const sanitizedName = path.basename(name, ".pls");
+  const playlistPath = path.join(playlistFolder, `${sanitizedName}.pls`);
+
+  await fsp.unlink(playlistPath);
+}

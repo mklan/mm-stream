@@ -10,6 +10,8 @@ import {
   getPlaylist,
   addTracksToPlaylist,
   removeTrackFromPlaylist,
+  createPlaylist,
+  deletePlaylist,
 } from "./services/playlist-service";
 
 const app = express();
@@ -59,6 +61,21 @@ app.get(
   }
 );
 
+app.put(
+  "/playlist/:name",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playlistName = req.params.name;
+      await createPlaylist(playlistName);
+      res
+        .status(201)
+        .json({ message: `Playlist "${playlistName}" created successfully` });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 app.post(
   "/playlist/:name",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -98,6 +115,19 @@ app.delete(
         trackIndex
       );
       res.json(updatedTracks);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.delete(
+  "/playlist/:name",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playlistName = req.params.name;
+      await deletePlaylist(playlistName);
+      res.json({ message: `Playlist "${playlistName}" deleted successfully` });
     } catch (error) {
       next(error);
     }

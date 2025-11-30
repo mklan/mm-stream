@@ -368,4 +368,84 @@ NumberOfEntries=2`
       await request(app).delete("/playlist/nonexistent/track/0").expect(500);
     });
   });
+
+  describe("PUT /playlist/:name", () => {
+    it("should create a new empty playlist", async () => {
+      const app = getApp();
+
+      const response = await request(app)
+        .put("/playlist/newemptylist")
+        .expect(201);
+
+      expect(response.body.message).toContain("created successfully");
+
+      // Verify it was created and is empty
+      const getResponse = await request(app)
+        .get("/playlist/newemptylist")
+        .expect(200);
+      expect(getResponse.body).toHaveLength(0);
+    });
+
+    it("should return 500 if playlist already exists", async () => {
+      const app = getApp();
+
+      await request(app).put("/playlist/favorites").expect(500);
+    });
+
+    it("should sanitize playlist name", async () => {
+      const app = getApp();
+
+      const response = await request(app)
+        .put("/playlist/..%2Fsafecreate")
+        .expect(201);
+
+      expect(response.body.message).toContain("created successfully");
+
+      // Should create "safecreate" not "../safecreate"
+      const getResponse = await request(app)
+        .get("/playlist/safecreate")
+        .expect(200);
+      expect(getResponse.body).toHaveLength(0);
+    });
+  });
+
+  describe("DELETE /playlist/:name", () => {
+    it("should delete an existing playlist", async () => {
+      const app = getApp();
+
+      // Create a playlist to delete
+      await request(app).put("/playlist/todelete").expect(201);
+
+      const response = await request(app)
+        .delete("/playlist/todelete")
+        .expect(200);
+
+      expect(response.body.message).toContain("deleted successfully");
+
+      // Verify it's deleted
+      await request(app).get("/playlist/todelete").expect(500);
+    });
+
+    it("should return 500 for non-existent playlist", async () => {
+      const app = getApp();
+
+      await request(app).delete("/playlist/nonexistent").expect(500);
+    });
+
+    it("should sanitize playlist name", async () => {
+      const app = getApp();
+
+      // Create a playlist to delete
+      await request(app).put("/playlist/safedelete").expect(201);
+
+      const response = await request(app)
+        .delete("/playlist/..%2Fsafedelete")
+        .expect(200);
+
+      expect(response.body.message).toContain("deleted successfully");
+
+      // Verify "safedelete" was deleted
+      await request(app).get("/playlist/safedelete").expect(500);
+    });
+  });
 });

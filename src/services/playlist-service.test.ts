@@ -360,4 +360,95 @@ NumberOfEntries=1`;
       await expect(removeTrackFromPlaylist("nonexistent", 0)).rejects.toThrow();
     });
   });
+
+  describe("createPlaylist", () => {
+    it("should create a new empty playlist", async () => {
+      const { createPlaylist, getPlaylist } = require("./playlist-service");
+
+      await createPlaylist("newempty");
+
+      const tracks = await getPlaylist("newempty");
+      expect(tracks).toHaveLength(0);
+    });
+
+    it("should create playlist file with proper format", async () => {
+      const { createPlaylist } = require("./playlist-service");
+
+      await createPlaylist("formatted");
+
+      const content = await fsp.readFile(
+        path.join(testPlaylistFolder, "formatted.pls"),
+        "utf-8"
+      );
+      expect(content).toContain("[playlist]");
+      expect(content).toContain("NumberOfEntries=0");
+      expect(content).toContain("Version=2");
+    });
+
+    it("should throw error if playlist already exists", async () => {
+      const { createPlaylist } = require("./playlist-service");
+
+      await createPlaylist("duplicate");
+
+      await expect(createPlaylist("duplicate")).rejects.toThrow(
+        "already exists"
+      );
+    });
+
+    it("should sanitize playlist name", async () => {
+      const { createPlaylist, getPlaylist } = require("./playlist-service");
+
+      await createPlaylist("../safe");
+
+      // Should create "safe.pls" not "../safe.pls"
+      const tracks = await getPlaylist("safe");
+      expect(tracks).toHaveLength(0);
+    });
+
+    it("should create playlist folder if it doesn't exist", async () => {
+      await fsp.rmdir(testPlaylistFolder);
+      const { createPlaylist } = require("./playlist-service");
+
+      await createPlaylist("test");
+
+      const exists = await fsp.stat(testPlaylistFolder);
+      expect(exists.isDirectory()).toBe(true);
+    });
+  });
+
+  describe("deletePlaylist", () => {
+    it("should delete an existing playlist", async () => {
+      const { createPlaylist, deletePlaylist } = require("./playlist-service");
+
+      await createPlaylist("todelete");
+      await deletePlaylist("todelete");
+
+      // Verify it's deleted
+      const exists = await fsp
+        .access(path.join(testPlaylistFolder, "todelete.pls"))
+        .then(() => true)
+        .catch(() => false);
+      expect(exists).toBe(false);
+    });
+
+    it("should throw error for non-existent playlist", async () => {
+      const { deletePlaylist } = require("./playlist-service");
+
+      await expect(deletePlaylist("nonexistent")).rejects.toThrow();
+    });
+
+    it("should sanitize playlist name", async () => {
+      const { createPlaylist, deletePlaylist } = require("./playlist-service");
+
+      await createPlaylist("deletesafe");
+      await deletePlaylist("../deletesafe");
+
+      // Should delete "deletesafe.pls" not "../deletesafe.pls"
+      const exists = await fsp
+        .access(path.join(testPlaylistFolder, "deletesafe.pls"))
+        .then(() => true)
+        .catch(() => false);
+      expect(exists).toBe(false);
+    });
+  });
 });
