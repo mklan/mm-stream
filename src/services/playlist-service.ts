@@ -190,6 +190,41 @@ export async function createPlaylist(name: string): Promise<void> {
 }
 
 /**
+ * Renames a playlist file
+ */
+export async function renamePlaylist(
+  oldName: string,
+  newName: string
+): Promise<void> {
+  // Sanitize both names to prevent path traversal
+  const sanitizedOldName = path.basename(oldName, ".pls");
+  const sanitizedNewName = path.basename(newName, ".pls");
+
+  const oldPath = path.join(playlistFolder, `${sanitizedOldName}.pls`);
+  const newPath = path.join(playlistFolder, `${sanitizedNewName}.pls`);
+
+  // Check if source playlist exists
+  try {
+    await fsp.access(oldPath);
+  } catch (error) {
+    throw new Error(`Playlist "${sanitizedOldName}" not found`);
+  }
+
+  // Check if target name already exists
+  try {
+    await fsp.access(newPath);
+    throw new Error(`Playlist "${sanitizedNewName}" already exists`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  // Rename the file
+  await fsp.rename(oldPath, newPath);
+}
+
+/**
  * Deletes a playlist file
  */
 export async function deletePlaylist(name: string): Promise<void> {

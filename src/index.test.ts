@@ -449,4 +449,104 @@ NumberOfEntries=2`
       await request(app).get("/playlist/safedelete").expect(500);
     });
   });
+
+  describe("PATCH /playlist/:name", () => {
+    it("should rename an existing playlist", async () => {
+      const app = await getApp();
+
+      // Create a playlist with tracks
+      await request(app).put("/playlist/oldname").expect(201);
+      await request(app)
+        .post("/playlist/oldname")
+        .send([
+          { file: "/song1.mp3", title: "Song 1" },
+          { file: "/song2.mp3", title: "Song 2" },
+        ])
+        .expect(200);
+
+      // Rename it
+      const response = await request(app)
+        .patch("/playlist/oldname")
+        .send({ newName: "newname" })
+        .expect(200);
+
+      expect(response.body.message).toContain("renamed");
+      expect(response.body.message).toContain("oldname");
+      expect(response.body.message).toContain("newname");
+
+      // Old name should not exist
+      await request(app).get("/playlist/oldname").expect(500);
+
+      // New name should exist with tracks
+      const getResponse = await request(app)
+        .get("/playlist/newname")
+        .expect(200);
+      expect(getResponse.body).toHaveLength(2);
+      expect(getResponse.body[0].file).toBe("/song1.mp3");
+    });
+
+    it("should return 400 if newName is missing", async () => {
+      const app = await getApp();
+
+      await request(app).put("/playlist/test").expect(201);
+
+      const response = await request(app)
+        .patch("/playlist/test")
+        .send({})
+        .expect(400);
+
+      expect(response.body.error).toContain("newName");
+    });
+
+    it("should return 400 if newName is not a string", async () => {
+      const app = await getApp();
+
+      await request(app).put("/playlist/testrename").expect(201);
+
+      const response = await request(app)
+        .patch("/playlist/testrename")
+        .send({ newName: 123 })
+        .expect(400);
+
+      expect(response.body.error).toContain("newName");
+    });
+
+    it("should return 500 if source playlist does not exist", async () => {
+      const app = await getApp();
+
+      await request(app)
+        .patch("/playlist/nonexistent")
+        .send({ newName: "newname" })
+        .expect(500);
+    });
+
+    it("should return 500 if target playlist already exists", async () => {
+      const app = await getApp();
+
+      await request(app).put("/playlist/playlist1").expect(201);
+      await request(app).put("/playlist/playlist2").expect(201);
+
+      await request(app)
+        .patch("/playlist/playlist1")
+        .send({ newName: "playlist2" })
+        .expect(500);
+    });
+
+    it("should sanitize both old and new playlist names", async () => {
+      const app = await getApp();
+
+      await request(app).put("/playlist/safe").expect(201);
+
+      const response = await request(app)
+        .patch("/playlist/..%2Fsafe")
+        .send({ newName: "../../newsafe" })
+        .expect(200);
+
+      expect(response.body.message).toContain("renamed");
+
+      // Should rename "safe" to "newsafe" (both sanitized)
+      await request(app).get("/playlist/safe").expect(500);
+      await request(app).get("/playlist/newsafe").expect(200);
+    });
+  });
 });

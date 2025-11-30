@@ -11,6 +11,7 @@ import {
   addTracksToPlaylist,
   removeTrackFromPlaylist,
   createPlaylist,
+  renamePlaylist,
   deletePlaylist,
 } from "./services/playlist-service";
 
@@ -115,6 +116,30 @@ app.delete(
         trackIndex
       );
       res.json(updatedTracks);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.patch(
+  "/playlist/:name",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const oldName = req.params.name;
+      const { newName } = req.body;
+
+      if (!newName || typeof newName !== "string") {
+        res
+          .status(400)
+          .json({ error: "Request body must contain a 'newName' string" });
+        return;
+      }
+
+      await renamePlaylist(oldName, newName);
+      res.json({
+        message: `Playlist "${oldName}" renamed to "${newName}" successfully`,
+      });
     } catch (error) {
       next(error);
     }

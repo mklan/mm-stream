@@ -103,6 +103,15 @@ The Dockerfile uses multi-stage builds for optimal image size:
 
 ### Testing and Validation Workflow
 
+**CRITICAL: Test-Driven Development (TDD) is REQUIRED for all new features:**
+
+1. **Write tests FIRST** before implementing any new feature or endpoint
+2. Run `npm test` - tests should fail (red)
+3. Implement the minimal code to make tests pass
+4. Run `npm test` again - tests should pass (green)
+5. Refactor if needed while keeping tests green
+6. Run `npm run build` to ensure TypeScript compiles without errors
+
 **ALWAYS follow this workflow after making any code changes:**
 
 1. Run `npm test` to execute the test suite
@@ -112,16 +121,18 @@ The Dockerfile uses multi-stage builds for optimal image size:
    - Fix the issues
    - Re-run tests and build until they pass
 4. Ensure the application starts without errors
-5. Test the `/list` endpoint with various paths
-6. Test the `/stream` endpoint with actual media files
-7. Verify path validation prevents directory traversal
+5. Manually test relevant endpoints
+6. Verify path validation prevents directory traversal
 
 **When implementing new features:**
 
-- Always write tests for new functionality
+- **ALWAYS use Test-Driven Development (TDD)**
+- Write tests BEFORE writing implementation code
 - Follow the existing test patterns in `*.test.ts` files
 - Test both success and error cases
-- Ensure tests are passing before considering the feature complete
+- Test edge cases (empty inputs, path traversal, duplicate names, etc.)
+- Ensure all tests are passing before considering the feature complete
+- Never commit code without tests
 
 ### Dependencies
 

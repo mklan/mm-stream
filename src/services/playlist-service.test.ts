@@ -451,4 +451,120 @@ NumberOfEntries=1`;
       expect(exists).toBe(false);
     });
   });
+
+  describe("renamePlaylist", () => {
+    it("should rename an existing playlist", async () => {
+      const { createPlaylist, renamePlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
+
+      // Create a playlist with some tracks
+      await createPlaylist("oldname");
+      const tracks = [
+        { file: "/song1.mp3", title: "Song 1" },
+        { file: "/song2.mp3", title: "Song 2" },
+      ];
+      await fsp.writeFile(
+        path.join(testPlaylistFolder, "oldname.pls"),
+        `[playlist]\nFile1=/song1.mp3\nTitle1=Song 1\nFile2=/song2.mp3\nTitle2=Song 2\nNumberOfEntries=2\nVersion=2\n`,
+        "utf-8"
+      );
+
+      // Rename it
+      await renamePlaylist("oldname", "newname");
+
+      // Old name should not exist
+      const oldExists = await fsp
+        .access(path.join(testPlaylistFolder, "oldname.pls"))
+        .then(() => true)
+        .catch(() => false);
+      expect(oldExists).toBe(false);
+
+      // New name should exist with same content
+      const newTracks = await getPlaylist("newname");
+      expect(newTracks).toHaveLength(2);
+      expect(newTracks[0].file).toBe("/song1.mp3");
+      expect(newTracks[1].file).toBe("/song2.mp3");
+    });
+
+    it("should throw error if source playlist does not exist", async () => {
+      const { renamePlaylist } = await import("./playlist-service");
+
+      await expect(renamePlaylist("nonexistent", "newname")).rejects.toThrow(
+        'Playlist "nonexistent" not found'
+      );
+    });
+
+    it("should throw error if target playlist already exists", async () => {
+      const { createPlaylist, renamePlaylist } = await import(
+        "./playlist-service"
+      );
+
+      await createPlaylist("existing1");
+      await createPlaylist("existing2");
+
+      await expect(renamePlaylist("existing1", "existing2")).rejects.toThrow(
+        'Playlist "existing2" already exists'
+      );
+    });
+
+    it("should sanitize both old and new playlist names", async () => {
+      const { createPlaylist, renamePlaylist } = await import(
+        "./playlist-service"
+      );
+
+      await createPlaylist("safe");
+      await renamePlaylist("../safe", "../../newsafe");
+
+      // Should rename "safe.pls" to "newsafe.pls" (both sanitized)
+      const oldExists = await fsp
+        .access(path.join(testPlaylistFolder, "safe.pls"))
+        .then(() => true)
+        .catch(() => false);
+      expect(oldExists).toBe(false);
+
+      const newExists = await fsp
+        .access(path.join(testPlaylistFolder, "newsafe.pls"))
+        .then(() => true)
+        .catch(() => false);
+      expect(newExists).toBe(true);
+    });
+
+    it("should handle playlist names with .pls extension", async () => {
+      const { createPlaylist, renamePlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
+
+      await createPlaylist("test.pls");
+      await renamePlaylist("test.pls", "renamed.pls");
+
+      // Should work and strip .pls from both names
+      const tracks = await getPlaylist("renamed");
+      expect(tracks).toHaveLength(0);
+    });
+
+    it("should preserve playlist content after rename", async () => {
+      const { addTracksToPlaylist, renamePlaylist, getPlaylist } = await import(
+        "./playlist-service"
+      );
+
+      // Create playlist with tracks
+      const originalTracks = [
+        { file: "/album/track1.mp3", title: "Track 1", length: "180" },
+        { file: "/album/track2.mp3", title: "Track 2", length: "200" },
+        { file: "/album/track3.mp3", title: "Track 3", length: "220" },
+      ];
+      await addTracksToPlaylist("original", originalTracks);
+
+      // Rename it
+      await renamePlaylist("original", "renamed");
+
+      // Verify all tracks are preserved
+      const tracks = await getPlaylist("renamed");
+      expect(tracks).toHaveLength(3);
+      expect(tracks[0]).toEqual(originalTracks[0]);
+      expect(tracks[1]).toEqual(originalTracks[1]);
+      expect(tracks[2]).toEqual(originalTracks[2]);
+    });
+  });
 });
