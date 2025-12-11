@@ -12,15 +12,15 @@ services:
     volumes:
       - ${MM_FOLDER:-./media}:/media
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.media.rule=Host(`music.klan.cc`)"
-      - "traefik.http.routers.media.entrypoints=websecure"
-      - "traefik.http.routers.media.tls.certresolver=mydns"
-      - "traefik.http.services.media.loadbalancer.server.port=1507"
-    networks:
-        - traefik
+#     labels:
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.media.rule=Host(`music.klan.cc`)"
+#       - "traefik.http.routers.media.entrypoints=websecure"
+#       - "traefik.http.routers.media.tls.certresolver=mydns"
+#       - "traefik.http.services.media.loadbalancer.server.port=1507"
+#     networks:
+#         - traefik
 
-networks:
-  traefik:
-    external: true
+# networks:
+#   traefik:
+#     external: true
