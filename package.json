@@ -21,7 +21,7 @@
     "express": "^4.21.1",
     "ip": "^2.0.1",
     "mediaserver": "^0.1.1",
-    "music-metadata": "^10.6.3",
+    "music-metadata": "^11.12.1",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
